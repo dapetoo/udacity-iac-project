@@ -1,0 +1,15 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+
+# -------------Project Description Section ------------
+# --------------------------------
+Description: Udacity Cloud DevOps Nanodegree IAC EnvironmentName
+             Server Infrastructure provisioning using AWS CloudFormation
+
+# -------------Parameters Value Section ------------
+# --------------------------------
+Parameters:
+
+    EnvironmentName: 
+        Description: An environment name that will be prefixed to all resources
+        Type: String

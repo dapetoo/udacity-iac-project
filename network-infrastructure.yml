@@ -4,6 +4,7 @@ AWSTemplateFormatVersion: 2010-09-09
 # -------------Project Description Section ------------
 # --------------------------------
 Description: Udacity Cloud DevOps Nanodegree IAC EnvironmentName
+             Network Infrastructure provisioning using AWS CloudFormation
 
 # -------------Parameters Value Section ------------
 # --------------------------------
