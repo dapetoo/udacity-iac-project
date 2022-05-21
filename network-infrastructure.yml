@@ -205,3 +205,39 @@ Resources:
       RouteTableId: !Ref PrivateRouteTable2
       SubnetId: !Ref PrivateSubnet2
 
+  LoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Load Balancer HTTP traffic
+      GroupName: Load-balancer-security-group
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: TCP
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: TCP
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Ref Project
+
+  ApplicationSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Application Security Group
+      GroupName: Application-security-group
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - Description: Inbound rule to allow the Load Balancer.
+          IpProtocol: TCP
+          SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
+          FromPort: 80
+          ToPort: 80
+      Tags:
+        - Key: Name
+          Value: !Ref Project
+
