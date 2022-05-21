@@ -1,342 +1,117 @@
 AWSTemplateFormatVersion: 2010-09-09
+Description:
+  Udacity DevOps engineer nanodegree project 2 ( Highly scalable website).
 
+  Networks infrastructure Requirements Configuration
 
-# -------------Project Description Section ------------
-# --------------------------------
-Description: Udacity Cloud DevOps Nanodegree IAC EnvironmentName
-             Network Infrastructure provisioning using AWS CloudFormation
-
-# -------------Parameters Value Section ------------
-# --------------------------------
 Parameters:
+  Environment:
+    Description: An environment name to identify the project resources
+    Type: String
 
-    EnvironmentName: 
-        Description: An environment name that will be prefixed to all resources
-        Type: String
+  Project:
+    Description: Project name, used for resources tagging
+    Type: String
 
-    VpcCIDR: 
-        Description: The IP address range (CIDR notation)
-        Type: String
-        Default: 10.0.0.0/16
+  VpcCIDR:
+    Description: VPC CDIR IP Range
+    Type: String
+    Default: 10.0.0.0/16
 
-    PublicSubnet1CIDR:
-        Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
-        Type: String
-        Default: 10.0.0.0/24
+  PublicSubnet1CIDR:
+    Description: Public Subnet1 IP CIDR range
+    Type: String
+    Default: 10.0.0.0/24
 
-    PublicSubnet2CIDR:
-        Description: Please enter the IP range (CIDR notation) for the public subnet in the second Availability Zone
-        Type: String
-        Default: 10.0.1.0/24
+  PublicSubnet2CIDR:
+    Description: Public Subnet2 IP CIDR range
+    Type: String
+    Default: 10.0.1.0/24
 
-    PrivateSubnet1CIDR:
-        Description: Please enter the IP range (CIDR notation) for the private subnet in the first Availability Zone
-        Type: String
-        Default: 10.0.2.0/24
-
-    PrivateSubnet2CIDR:
-        Description: Please enter the IP range (CIDR notation) for the private subnet in the second Availability Zone
-        Type: String
-        Default: 10.0.3.0/24
+  PrivateSubnet1CIDR:
+    Description: Private Subnet1 IP CIDR range
+    Type: String
+    Default: 10.0.2.0/24
 
 
-# -------------Resources Declaration Section ------------
-# --------------------------------
+  PrivateSubnet2CIDR:
+    Description: Private Subnet2 IP CIDR range
+    Type: String
+    Default: 10.0.3.0/24
+
 Resources:
-
-  MyVPC:
+  
+  VPC:
     Type: AWS::EC2::VPC
-    Properties: 
+    Properties:
       CidrBlock: !Ref VpcCIDR
       EnableDnsHostnames: true
-      EnableDnsSupport: true
-      Tags: 
+      Tags:
         - Key: Name
-          Value: !Ref EnvironmentName
+          Value: !Ref Project
 
+  # InternetGateway connect VPC to the internet
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
       Tags:
-        - Key: EnvironmentName
-          Value: !Ref EnvironmentName
-    
-  
+        - Key: Name
+          Value: !Ref Project
+
+  # Gateway Attachment enables connectivity between the internet and the VPC
   GatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
       InternetGatewayId: !Ref InternetGateway
-      VpcId: !Ref MyVPC
+      VpcId: !Ref VPC
 
+#Subnetwork (Public and Private) for AZ1 and AZ2
   PublicSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
-      VpcId: !Ref MyVPC
-      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [0, !GetAZs ""]
       CidrBlock: !Ref PublicSubnet1CIDR
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: Public Subnet (Availability Zone 1)
-          
+          Value: !Ref Project
 
-  PrivateSubnet1:
-    Type: AWS::EC2::Subnet
-    Properties:
-        VpcId: !Ref MyVPC
-        AvailabilityZone: !Select [ 0, !GetAZs '' ]
-        CidrBlock: !Ref PrivateSubnet1CIDR
-        MapPublicIpOnLaunch: false
-        Tags:
-          - Key: Name
-            Value: Private Subnet (Availability Zone 1)
-          - Key: EnvironmentName
-            Value: !Ref EnvironmentName
-
-
-  # Specifies an Elastic IP (EIP) address and can, optionally, associate it with an Amazon EC2 instance
-  NatGateway1EIP:
-    Type: AWS::EC2::EIP
-    DependsOn: GatewayAttachment
-    Properties:
-        Domain: vpc
-
-  NatGateway1:
-    Type: AWS::EC2::NatGateway
-    Properties:
-      AllocationId: !GetAtt NatGateway1EIP.AllocationId
-      SubnetId: !Ref PublicSubnet1
-      Tags:
-        - Key: Name
-          Value: "NAT Gateway 1"
-        - Key: EnvironmentName
-          Value: !Ref EnvironmentName
-
-
-  # Public sub network
   PublicSubnet2:
-    Type: AWS::EC2::Subnet
-    Properties:
-        VpcId: !Ref MyVPC
-        AvailabilityZone: !Select [ 1, !GetAZs '' ]
+      Type: AWS::EC2::Subnet
+      Properties:
+        VpcId: !Ref VPC
+        AvailabilityZone: !Select [1, !GetAZs ""]
         CidrBlock: !Ref PublicSubnet2CIDR
         MapPublicIpOnLaunch: true
         Tags:
           - Key: Name
-            Value: "Public Subnet (Availability Zone 1)"
-          - Key: EnvironmentName
-            Value: !Ref EnvironmentName
+            Value: !Ref Project
 
-  # Private sub network
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      CidrBlock: !Ref PrivateSubnet1CIDR
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: Private Subnet (Availability Zone 1)
+        - Key: Project
+          Value: !Ref Project
+
   PrivateSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
-        VpcId: !Ref MyVPC
-        AvailabilityZone: !Select [ 1, !GetAZs '' ]
-        CidrBlock: !Ref PrivateSubnet2CIDR
-        MapPublicIpOnLaunch: false
-        Tags:
-          - Key: Name
-            Value: "Private Subnet (Availability Zone 1)"
-          - Key: EnvironmentName
-            Value: !Ref EnvironmentName
-
-  NatGateway2EIP:
-    Type: AWS::EC2::EIP
-    DependsOn: GatewayAttachment
-    Properties:
-        Domain: vpc
-
-  NatGateway2:
-    Type: AWS::EC2::NatGateway
-    Properties:
-      AllocationId: !GetAtt NatGateway2EIP.AllocationId
-      SubnetId: !Ref PublicSubnet2
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      CidrBlock: !Ref PrivateSubnet2CIDR
+      MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
-          Value: NAT Gateway 2
-        - Key: EnvironmentName
-          Value: !Ref EnvironmentName
+          Value: "Private Subnet (Availability Zone 1)"
+        - Key: Project
+          Value: !Ref Project
 
-
-  PublicRouteTable:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId: !Ref MyVPC
-      Tags:
-        - Key: Name
-          Value: "Public Route Table"
-        - Key: EnvironmentName
-          Value: !Ref EnvironmentName
-
-
-  DefaultPublicRoute:
-    Type: AWS::EC2::Route
-    Properties:
-      RouteTableId: !Ref PublicRouteTable
-      DestinationCidrBlock: 0.0.0.0/0
-      GatewayId: !Ref InternetGateway
-
-
-  PublicSubnet1RouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId: !Ref PublicRouteTable
-      SubnetId: !Ref PublicSubnet1
-
-  PublicSubnet2RouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-        RouteTableId: !Ref PublicRouteTable
-        SubnetId: !Ref PublicSubnet2
-
-
-  PrivateRouteTable1:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId: !Ref MyVPC
-      Tags:
-        - Key: Name
-          Value: "Private Route Table 1"
-        - Key: EnvironmentName
-          Value: !Ref EnvironmentName
-
-
-  DefaultPrivateRoute1:
-    Type: AWS::EC2::Route
-    Properties:
-      RouteTableId: !Ref PrivateRouteTable1
-      DestinationCidrBlock: 0.0.0.0/0
-      NatGatewayId: !Ref NatGateway1
-
-
-  PrivateSubnet1RouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId: !Ref PrivateRouteTable1
-      SubnetId: !Ref PrivateSubnet1
-
-
-  PrivateRouteTable2:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId: !Ref MyVPC
-      Tags:
-        - Key: Name
-          Value: "Private Route Table 2"
-        - Key: EnvironmentName
-          Value: !Ref EnvironmentName
-
-
-  DefaultPrivateRoute2:
-    Type: AWS::EC2::Route
-    Properties:
-      RouteTableId: !Ref PrivateRouteTable2
-      DestinationCidrBlock: 0.0.0.0/0
-      NatGatewayId: !Ref NatGateway2
-
-
-  PrivateSubnet2RouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId: !Ref PrivateRouteTable2
-      SubnetId: !Ref PrivateSubnet2
-
-
-  # Load Balancer Security Group
-  LoadBalancerSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: Load Balancer HTTP traffic
-      GroupName: Load-balancer-security-group
-      VpcId: !Ref MyVPC
-      SecurityGroupIngress:
-      - IpProtocol: TCP
-        FromPort: 80
-        ToPort: 80
-        CidrIp: 0.0.0.0/0
-      SecurityGroupEgress:
-      - IpProtocol: TCP
-        FromPort: 80
-        ToPort: 80
-        CidrIp: 0.0.0.0/0
-      Tags:
-        - Key: EnvironmentName
-          Value: !Ref EnvironmentName
-
-
-  ApplicationSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: Application Security Group
-      GroupName: Application-security-group
-      VpcId: !Ref MyVPC
-      # Inbound
-      SecurityGroupIngress:
-      - Description: Inbound rule to allow the Load Balancer.
-        IpProtocol: TCP
-        SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
-        FromPort: 80
-        ToPort: 80
-      Tags:
-        - Key: EnvironmentName
-          Value: !Ref EnvironmentName
-
-
-# -------------Output Section ------------
-# --------------------------------
-
-Outputs:
-  VPC:
-    Description: VPC reference
-    Value: !Ref MyVPC
-    Export:
-      Name: !Sub ${EnvironmentName}-VPCID
-
-  PublicSubnets:
-    Description: Public subnet IDs
-    Value: !Join [ ",", [ !Ref PublicSubnet1, !Ref PublicSubnet2 ]]
-    Export:
-      Name: !Sub ${EnvironmentName}-Public-Subnet-IDs
-
-  PublicSubnet1CIDR:
-    Description: Public Subnet 1 CIDR
-    Value: !Ref PublicSubnet1CIDR
-    Export:
-      Name: !Sub ${EnvironmentName}-Public-Subnet-1-CIDR
-
-  PublicSubnet2CIDR:
-    Description: Public Subnet 2 CIDR
-    Value: !Ref PublicSubnet2CIDR
-    Export:
-      Name: !Sub ${EnvironmentName}-Public-Subnet-2-CIDR
-
-  PublicSubnet1ID:
-    Description: Public Subnet 1 ID
-    Value: !Ref PublicSubnet1
-    Export:
-      Name: !Sub ${EnvironmentName}-Public-Subnet-1-ID
-
-  PublicSubnet2ID:
-    Description: Public Subnet 2 ID
-    Value: !Ref PublicSubnet2
-    Export:
-      Name: !Sub ${EnvironmentName}-Public-Subnet-2-ID
-
-  PrivateSubnets:
-    Description: Private subnet IDs
-    Value: !Join [ ",", [ !Ref PrivateSubnet1, !Ref PrivateSubnet2 ]]
-    Export:
-      Name: !Sub ${EnvironmentName}-Private-Subnet-IDs
-
-  ApplicationSecurityGroup:
-    Description: Applicaion security group
-    Value: !Ref ApplicationSecurityGroup
-    Export:
-      Name: !Sub ${EnvironmentName}-AppSecurityGroupID
-
-  LoadBalancerSecurityGroup:
-    Description: Load balancer security group
-    Value: !Ref LoadBalancerSecurityGroup
-    Export:
-      Name: !Sub ${EnvironmentName}-LBSecurityGroupID
+  
