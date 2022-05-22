@@ -20,3 +20,5 @@ Are used in provisioning the server infrastructure such as the LaunchConfigurati
 aws cloudformation create-stack --stack-name Network-Infrastructure-Stack --template-body file://server-infrastructure-configuration.yml --parameters file://server-parameters.json
 ```
 
+#### DNS Hostname for the web application
+http://serve-webap-1q0owsthl90jp-696484208.us-east-2.elb.amazonaws.com/
