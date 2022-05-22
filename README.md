@@ -1,11 +1,20 @@
-### Project Title - Deploy a high-availability web app using CloudFormation
-This folder provides the starter code for the "ND9991 - C2- Infrastructure as Code - Deploy a high-availability web app using CloudFormation" project. This folder contains the following files:
+# Project Title - Deploy a high-availability web app using CloudFormation
 
+This project contains files to provision infrastructure for a web application on AWS using AWS CloudFormation service.
 
-#### final-project-starter.yml
-Students have to write the CloudFormation code using this YAML template for building the cloud infrastructure, as required for the project. 
+## File Structure
 
-#### server-parameters.json
-Students may use a JSON file for increasing the generic nature of the YAML code. For example, the JSON file contains a "ParameterKey" as "EnvironmentName" and "ParameterValue" as "UdacityProject". 
+### network-infrastructure-configutation.yml and network-parameters.json
 
-In YAML code, the `${EnvironmentName}` would be substituted with `UdacityProject` accordingly.
+Are used in provisioning the network infrastructure such as the VPC, Subnets, Route Table, ElasticIP, NatGateway etc and can be created using the below commands.
+
+``` aws cloudformation create-stack --stack-name Network-Infrastructure-Stack --template-body file://network-infrastructure-configuration.yml --parameters file://network-parameters.json  
+```
+
+### server-infrastructure-configutation.yml and server-parameters.json
+
+Are used in provisioning the server infrastructure such as the LaunchConfiguration, AutoScaling, LoadBalancer etc and can be created using the below commands.
+
+``` aws cloudformation create-stack --stack-name Network-Infrastructure-Stack --template-body file://server-infrastructure-configuration.yml --parameters file://server-parameters.json
+```
+

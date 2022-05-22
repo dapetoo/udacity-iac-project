@@ -1,11 +1,7 @@
 [
 	{
-		"ParameterKey": "Environment",
-		"ParameterValue": "Udacity Cloud DevOps NanoDegree Project"
-	},
-	{
-		"ParameterKey": "Project",
-		"ParameterValue": "Udacity IAC Project (AWS CloudFormation)"
+		"ParameterKey": "EnvironmentName",
+		"ParameterValue": "Udacity-Cloud-DevOps-NanoDegree-Project"
 	},
 	{
 		"ParameterKey": "VpcCIDR",

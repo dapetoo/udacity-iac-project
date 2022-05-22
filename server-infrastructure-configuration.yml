@@ -1,0 +1,110 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 
+  Udacity Cloud DevOps Engineer Nanodegree Project 2(Infrastructure as Code (IAC)) using AWS CloudFormation
+  Server infrastructure Requirements Configuration
+
+Parameters:
+  EnvironmentName:
+    Description: An environment name to identify the project resources
+    Type: String
+
+Resources:
+
+  WebAppServer:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          apt-get update -y
+          apt-get install apache2 -y
+          systemctl enable apache2.service
+          systemctl start apache2.service
+          cd /var/www/html
+          echo "<h1>It works! Udagram, Udacity</h1>" > index.html
+          systemctl restart apache2.service
+      ImageId: ami-0aeb7c931a5a61206
+      SecurityGroups:
+      - Fn::ImportValue:
+          !Sub "${EnvironmentName}-AppSecurityGroupID"
+      InstanceType: t3.medium
+      BlockDeviceMappings:
+      - DeviceName: "/dev/sdk"
+        Ebs:
+          VolumeSize: 10
+
+  WebAppTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPath: / 
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 7
+      HealthyThresholdCount: 2
+      Port: 80
+      Protocol: HTTP
+      UnhealthyThresholdCount: 5
+      VpcId:
+        Fn::ImportValue:
+          Fn::Sub: "${EnvironmentName}-VPCID"
+
+  WebAppServerGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      VPCZoneIdentifier:
+        - Fn::ImportValue: !Sub ${EnvironmentName}-Private-Subnet-IDs
+      LaunchConfigurationName: !Ref WebAppServer
+      MinSize: '2'
+      MaxSize: '4'
+      TargetGroupARNs:
+      - Ref: WebAppTargetGroup
+      Tags:
+        - Key: Name
+          Value: !Ref EnvironmentName
+          PropagateAtLaunch: true
+
+
+  WebAppLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Subnets:
+      - Fn::ImportValue: !Sub ${EnvironmentName}-Public-Subnet-1-ID
+      - Fn::ImportValue: !Sub ${EnvironmentName}-Public-Subnet-2-ID
+      SecurityGroups:
+      - Fn::ImportValue: !Sub ${EnvironmentName}-LBSecurityGroupID
+      Tags:
+        - Key: Name
+          Value: !Ref EnvironmentName
+
+  LoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+      - Type: forward
+        TargetGroupArn: !Ref WebAppTargetGroup
+      LoadBalancerArn: !Ref WebAppLoadBalancer
+      Port: '80'
+      Protocol: HTTP
+
+  LoadBalancerListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+      - Type: forward
+        TargetGroupArn: !Ref WebAppTargetGroup
+      Conditions:
+      - Field: path-pattern
+        Values: [/]
+      ListenerArn: !Ref LoadBalancerListener
+      Priority: 1
+
+Outputs:
+
+  DNS:
+    Description: The website (WebAppLoadBalancer) URL
+    Value:
+      !Sub
+        - 'http://${DNSName}'
+        - {DNSName: !GetAtt 'WebAppLoadBalancer.DNSName'}
+    Export:
+      Name: !Sub "${EnvironmentName}-SiteURL"
